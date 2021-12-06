@@ -1,0 +1,37 @@
+package pt.iul.poo.firefight.starterpack;
+
+import pt.iul.ista.poo.utils.Point2D;
+
+public class Grass extends Terrain {
+
+	public Grass(Point2D position) {
+		super(position);
+	}
+
+	@Override
+	public int getLayer() {
+		return 0;
+	}
+
+	@Override
+	public String getName() {
+		if (!super.isBurnt()) {
+			return "grass";
+		}
+		return "burntgrass";
+	}
+
+	@Override
+	public void updateElement() {
+		super.updateElement();
+		if (super.gameEngine.isBurning(getPosition())) {
+			count++;
+			if (count > 3) {
+				setBurnt(true);
+				gameEngine.removeGameElement(gameEngine.getGameElement(getPosition()));
+			}
+
+		}
+	}
+
+}
