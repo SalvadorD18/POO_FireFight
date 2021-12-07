@@ -24,14 +24,6 @@ public class Grass extends Terrain {
 	@Override
 	public void updateElement() {
 		super.updateElement();
-		if (super.gameEngine.isBurning(getPosition())) {
-			count++;
-			if (count > 3) {
-				setBurnt(true);
-				gameEngine.removeGameElement(gameEngine.getGameElement(getPosition()));
-			}
-
-		}
+		burned(3);
 	}
-
 }

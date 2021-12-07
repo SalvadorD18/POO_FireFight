@@ -25,16 +25,6 @@ public class Eucaliptus extends Terrain {
 	@Override
 	public void updateElement() {
 		super.updateElement();
-		GameEngine gameEngine = GameEngine.getInstance();
-		if (gameEngine.isBurning(getPosition())) {
-			count++;
-			if (count > 5) {
-				setBurnt(true);
-				gameEngine.removeGameElement(gameEngine.getGameElement(getPosition()));
-			}
-
-		}
+		burned(5);
 	}
-
-
 }

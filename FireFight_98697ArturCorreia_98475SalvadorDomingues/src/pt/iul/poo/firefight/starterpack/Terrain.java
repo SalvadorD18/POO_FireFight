@@ -47,6 +47,17 @@ public abstract class Terrain extends GameElement implements Burnable, Updatable
 			}
 		}
 	}
+	
+	public void burned(int v) {
+		if (gameEngine.isBurning(getPosition())) {
+			count++;
+			if (count > v) {
+				setBurnt(true);
+				gameEngine.removeGameElement(gameEngine.getGameElement(getPosition()));
+				gameEngine.score -= v;
+			}
+		}
+	}
 		
 	public void updateElement() {
 		burn();	

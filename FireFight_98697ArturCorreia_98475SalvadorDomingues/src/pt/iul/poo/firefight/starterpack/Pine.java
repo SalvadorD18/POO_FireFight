@@ -28,14 +28,6 @@ public class Pine extends Terrain {
 	@Override
 	public void updateElement() {
 		super.updateElement();
-		if (super.gameEngine.isBurning(getPosition())) {
-			count++;
-			if (count > 10) {
-				setBurnt(true);
-				gameEngine.removeGameElement(gameEngine.getGameElement(getPosition()));
-			}
-		}
+		burned(10);
 	}
-
-
 }

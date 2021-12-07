@@ -60,6 +60,7 @@ public class Fireman extends MovableObject {
 			water.setWaterDirection(key);
 			gameEngine.addGameElement(water);
 			gameEngine.removeGameElement(gameEngine.getGameElement(newPosition));
+			gameEngine.score += 10;
 		}
 
 		if (key == KeyEvent.VK_ENTER) {

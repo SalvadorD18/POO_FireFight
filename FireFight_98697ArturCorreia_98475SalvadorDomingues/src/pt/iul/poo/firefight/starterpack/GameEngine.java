@@ -3,10 +3,17 @@ package pt.iul.poo.firefight.starterpack;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
+
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 import pt.iul.ista.poo.gui.ImageMatrixGUI;
 import pt.iul.ista.poo.observer.Observed;
@@ -43,6 +50,10 @@ public class GameEngine implements Observer {
 	private Fireman fireman;			// Referencia para o bombeiro
 	private Bulldozer bulldozer;
 	int level = 0;
+	String nickname;
+	int score = 0;
+	Player ActivePlayer = new Player(nickname);
+	ArrayList<Player> ListOfPlayers = new ArrayList<>();
 
 	List<GameElement> aux_add = new ArrayList<>(); // lista auxiliar para que se adicionem elementos para que posteriormente sejam todos adicionados à tileList
 	List<GameElement> aux_remove = new ArrayList<>();
@@ -108,22 +119,29 @@ public class GameEngine implements Observer {
 			fireman.exitBulldozer();
 			fireman.setPosition(bulldozer.getPosition());
 		}
-		
+
 		if (key == KeyEvent.VK_P)
 			callPlane();
-		
-		if (isTheMapStillOnFire() == false)
+
+		if (isTheMapStillOnFire() == false) {
 			changeMap();
-			
+			try {
+				scoreRegist();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
 		for (GameElement gameElement : tileList) {
 			gameElement.updateElement();
 		}
-		
+		gui.setStatusMessage("Pontuação de " + nickname + " : "+ score);
+
 		tileList.addAll(aux_add);
 		tileList.removeAll(aux_remove);
 
 		for (GameElement gameElement : tileList) {
-			System.out.println("nome:" + gameElement.getName() + " posiçao:" + gameElement.getPosition() + " está a arder:" + isBurning(gameElement.getPosition()));
+			System.out.println("nome:" + gameElement.getName() + " posição:" + gameElement.getPosition() + " está a arder:" + isBurning(gameElement.getPosition()));
 		}
 		gui.update();                            // redesenha as imagens na GUI, tendo em conta as novas posicoes
 	}
@@ -134,6 +152,10 @@ public class GameEngine implements Observer {
 		createMatrix(file);      // criar mapa do terreno
 		createMoreStuff(file);    // criar mais objetos (bombeiro, fogo,...)
 		sendImagesToGUI();    // enviar as imagens para a GUI
+		//ImageIcon icon = new ImageIcon("images/fireman.png");
+		//JOptionPane.showInputDialog(null, "Introduz o teu nickname: ", "FireFight", JOptionPane.PLAIN_MESSAGE, icon, null, "");
+		nickname = JOptionPane.showInputDialog(null, "Introduz o teu nickname: ", "FireFight", JOptionPane.PLAIN_MESSAGE);
+		ListOfPlayers.add(new Player(nickname));
 	}
 
 	public char[][] createMatrix(File file) throws FileNotFoundException {
@@ -196,18 +218,18 @@ public class GameEngine implements Observer {
 	}
 
 
-	// Envio das mensagens para a GUI - note que isto so' precisa de ser feito no inicio
-	// Nao e' suposto re-enviar os objetos se a unica coisa que muda sao as posicoes  
+	// Envio das mensagens para a GUI - note que isto só precisa de ser feito no inicio
+	// Nao é suposto re-enviar os objetos se a unica coisa que muda sao as posicoes  
 	private void sendImagesToGUI() {
 		for (GameElement gameElement : tileList) {
 			gui.addImage(gameElement);
 		}
 	}
 
-	public GameElement getGameElement(Point2D p) {
+	public GameElement getGameElement(Point2D position) {
 		for (int i = tileList.size() - 1; i >= 0; i--) {
 			GameElement gameElement = tileList.get(i);
-			if (gameElement.getPosition().equals(p)) {
+			if (gameElement.getPosition().equals(position)) {
 				return gameElement;
 			}
 		}
@@ -297,14 +319,33 @@ public class GameEngine implements Observer {
 			tileList.clear();
 			gui.clearImages();
 			level++;
-			String nome = "levels\\level"+level+".txt";
-			File file = new File(nome);
-			System.out.println(nome+ " "+ file.exists());
+			String name = "levels\\level"+level+".txt";
+			File file = new File(name);
+			System.out.println(name+ " "+ file.exists());
 			createTerrain(createMatrix(file));
 			createMoreStuff(file);
 			sendImagesToGUI();
 		} catch (FileNotFoundException e) {
 			System.out.println("Ficheiro não encontrado.");
 		}
+	}
+
+	public void scoreRegist() throws IOException {
+		try {
+			String name = "Leaderboards\\level"+level+"_score.txt";
+			File file = new File(name);
+			PrintWriter pw = new PrintWriter(file);
+			int scoreOfMap = score;
+			for (Player player : ListOfPlayers) {
+				pw.println("Jogador: "+player.getNickname()+" || Pontuação: "+scoreOfMap+"\n");
+			}
+			pw.close();
+		} catch (Exception e) {
+			System.out.println("O mapa não tem pontuações disponíveis.");
+		}
+	}
+	
+	public ArrayList<Player> getListOfPlayers() {
+		return ListOfPlayers;
 	}
 }
