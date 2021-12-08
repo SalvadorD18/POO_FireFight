@@ -9,7 +9,7 @@ import pt.iul.ista.poo.utils.Point2D;
 public class Pine extends Terrain {
 
 	public Pine(Point2D position) {
-		super(position);
+		super(position, 10);
 	}
 
 	@Override

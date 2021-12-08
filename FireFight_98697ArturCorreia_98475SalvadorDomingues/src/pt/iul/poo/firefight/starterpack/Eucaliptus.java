@@ -6,7 +6,7 @@ public class Eucaliptus extends Terrain {
 
 
 	public Eucaliptus(Point2D position) {
-		super(position);
+		super(position, 5);
 	}
 
 	@Override

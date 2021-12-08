@@ -50,10 +50,10 @@ public class GameEngine implements Observer {
 	private Fireman fireman;			// Referencia para o bombeiro
 	private Bulldozer bulldozer;
 	int level = 0;
-	String nickname;
 	int score = 0;
-	Player ActivePlayer = new Player(nickname);
+	String nickname;
 	ArrayList<Player> ListOfPlayers = new ArrayList<>();
+	//Player ActivePlayer = new Player(nickname, score);
 
 	List<GameElement> aux_add = new ArrayList<>(); // lista auxiliar para que se adicionem elementos para que posteriormente sejam todos adicionados à tileList
 	List<GameElement> aux_remove = new ArrayList<>();
@@ -124,18 +124,19 @@ public class GameEngine implements Observer {
 			callPlane();
 
 		if (isTheMapStillOnFire() == false) {
+			scoreRegist();
+			score = 0;
 			changeMap();
-			try {
-				scoreRegist();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
+
+		//Controlar para não ter pontos negativos -> impor um limite
+		//Pontuar por fogos apagados pelo avião
+		//Pontuar, talvez, por .....
 
 		for (GameElement gameElement : tileList) {
 			gameElement.updateElement();
 		}
-		gui.setStatusMessage("Pontuação de " + nickname + " : "+ score);
+		gui.setStatusMessage("Pontuação de " + nickname + " : "+getGameEngineScore());
 
 		tileList.addAll(aux_add);
 		tileList.removeAll(aux_remove);
@@ -152,10 +153,8 @@ public class GameEngine implements Observer {
 		createMatrix(file);      // criar mapa do terreno
 		createMoreStuff(file);    // criar mais objetos (bombeiro, fogo,...)
 		sendImagesToGUI();    // enviar as imagens para a GUI
-		//ImageIcon icon = new ImageIcon("images/fireman.png");
-		//JOptionPane.showInputDialog(null, "Introduz o teu nickname: ", "FireFight", JOptionPane.PLAIN_MESSAGE, icon, null, "");
-		nickname = JOptionPane.showInputDialog(null, "Introduz o teu nickname: ", "FireFight", JOptionPane.PLAIN_MESSAGE);
-		ListOfPlayers.add(new Player(nickname));
+		ImageIcon icon = new ImageIcon("images/fireman.png");
+		nickname = String.valueOf(JOptionPane.showInputDialog(null, "Introduz o teu nickname: ", "FireFight", JOptionPane.PLAIN_MESSAGE, icon, null, ""));
 	}
 
 	public char[][] createMatrix(File file) throws FileNotFoundException {
@@ -317,6 +316,7 @@ public class GameEngine implements Observer {
 	public void changeMap() {
 		try {
 			tileList.clear();
+			ListOfPlayers.clear();
 			gui.clearImages();
 			level++;
 			String name = "levels\\level"+level+".txt";
@@ -330,21 +330,49 @@ public class GameEngine implements Observer {
 		}
 	}
 
-	public void scoreRegist() throws IOException {
+	public void readScoreFile() {
 		try {
-			String name = "Leaderboards\\level"+level+"_score.txt";
+			String name = "Leaderboards\\scores_level"+level+".txt";
 			File file = new File(name);
-			PrintWriter pw = new PrintWriter(file);
-			int scoreOfMap = score;
-			for (Player player : ListOfPlayers) {
-				pw.println("Jogador: "+player.getNickname()+" || Pontuação: "+scoreOfMap+"\n");
+			Scanner s = new Scanner(file);
+			while (s.hasNextLine()) {
+				String nick = s.next();
+				int scoreOfMap = s.nextInt();
+				if (s.hasNextLine())
+					s.nextLine();
+				ListOfPlayers.add(new Player(nick, scoreOfMap));
 			}
-			pw.close();
-		} catch (Exception e) {
+			s.close();
+		} catch (FileNotFoundException e) {
 			System.out.println("O mapa não tem pontuações disponíveis.");
 		}
 	}
-	
+
+	public void scoreRegist() {
+		try {
+			readScoreFile();
+			String name = "Leaderboards\\scores_level"+level+".txt";
+			Player ActivePlayer = new Player(nickname, getGameEngineScore());
+			ListOfPlayers.add(ActivePlayer);
+			File file = new File(name);
+			PrintWriter pw = new PrintWriter(file);
+			ListOfPlayers.sort((a,b) -> b.getScore() - a.getScore());
+			for (int i = 0; i < 5 && i < ListOfPlayers.size(); i++) {
+				pw.println(ListOfPlayers.get(i).getNickname()+ " " +ListOfPlayers.get(i).getScore());
+			}
+			pw.close();
+
+		} catch (FileNotFoundException e) {
+			System.out.println("O mapa não tem pontuações disponíveis.");
+		}
+	}
+
+	public int getGameEngineScore() {
+		if (score < 0)
+			score = 0;
+		return score;
+	}
+
 	public ArrayList<Player> getListOfPlayers() {
 		return ListOfPlayers;
 	}

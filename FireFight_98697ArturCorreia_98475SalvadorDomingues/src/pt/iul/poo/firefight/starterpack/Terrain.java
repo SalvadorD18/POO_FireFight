@@ -1,7 +1,6 @@
 package pt.iul.poo.firefight.starterpack;
 
 import java.util.List;
-
 import pt.iul.ista.poo.gui.ImageTile;
 import pt.iul.ista.poo.utils.Point2D;
 
@@ -9,21 +8,24 @@ public abstract class Terrain extends GameElement implements Burnable, Updatable
 
 	GameEngine gameEngine = GameEngine.getInstance();
 
+	int value = 0;
+
 	private GameElement gameElement;
 
 	private boolean isBurnt;
-	
+
 	int count = 0;
 
-	public Terrain(Point2D position) {
+	public Terrain(Point2D position, int value) {
 
 		super(position);
+		this.value = value;
 	}
 
 	public boolean isBurnt() {
 		return isBurnt;
 	}
-	
+
 	public void setBurnt(boolean isBurnt) {
 		this.isBurnt = isBurnt;
 	}
@@ -47,7 +49,7 @@ public abstract class Terrain extends GameElement implements Burnable, Updatable
 			}
 		}
 	}
-	
+
 	public void burned(int v) {
 		if (gameEngine.isBurning(getPosition())) {
 			count++;
@@ -58,7 +60,7 @@ public abstract class Terrain extends GameElement implements Burnable, Updatable
 			}
 		}
 	}
-		
+
 	public void updateElement() {
 		burn();	
 	}

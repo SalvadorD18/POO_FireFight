@@ -5,7 +5,7 @@ import pt.iul.ista.poo.utils.Point2D;
 public class Grass extends Terrain {
 
 	public Grass(Point2D position) {
-		super(position);
+		super(position, 3);
 	}
 
 	@Override
