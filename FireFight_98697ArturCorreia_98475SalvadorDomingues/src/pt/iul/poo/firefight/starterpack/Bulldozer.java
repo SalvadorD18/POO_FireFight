@@ -10,7 +10,7 @@ public class Bulldozer extends MovableObject {
 	String name = "bulldozer";
 
 	public Bulldozer(Point2D position) {
-		super(position);
+		super(position, false);
 	}
 
 	@Override
@@ -31,23 +31,12 @@ public class Bulldozer extends MovableObject {
 
 		setBulldozerDirection(key);
 		if(gameEngine.isBurning(newPosition)) {
-
 		}
 
 		if (canMoveTo(newPosition) && !gameEngine.isBurning(newPosition)) {
 			setPosition(newPosition);
 			gameEngine.addGameElement(new Land(getPosition()));
 		}
-	}
-
-	// Verifica se a posicao p esta' dentro da grelha de jogo
-	public boolean canMoveTo(Point2D p) {
-
-		if (p.getX() < 0) return false;
-		if (p.getY() < 0) return false;
-		if (p.getX() >= GameEngine.GRID_WIDTH) return false;
-		if (p.getY() >= GameEngine.GRID_HEIGHT) return false;
-		return true;
 	}
 
 	public void setBulldozerDirection(int key) {
@@ -63,14 +52,6 @@ public class Bulldozer extends MovableObject {
 
 	@Override
 	public void updateElement() {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public void activateElement() {
-		// TODO Auto-generated method stub
 		
 	}
-
 }

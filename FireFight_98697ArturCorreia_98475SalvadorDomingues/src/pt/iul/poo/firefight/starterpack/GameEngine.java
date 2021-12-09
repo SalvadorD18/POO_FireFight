@@ -49,11 +49,11 @@ public class GameEngine implements Observer {
 	private List<GameElement> tileList;	// Lista de imagens
 	private Fireman fireman;			// Referencia para o bombeiro
 	private Bulldozer bulldozer;
+	
 	int level = 0;
 	int score = 0;
 	String nickname;
 	ArrayList<Player> ListOfPlayers = new ArrayList<>();
-	//Player ActivePlayer = new Player(nickname, score);
 
 	List<GameElement> aux_add = new ArrayList<>(); // lista auxiliar para que se adicionem elementos para que posteriormente sejam todos adicionados à tileList
 	List<GameElement> aux_remove = new ArrayList<>();
@@ -83,7 +83,7 @@ public class GameEngine implements Observer {
 		return INSTANCE;
 	}
 
-	public GameElement getFireman() {
+	public Fireman getFireman() {
 		return fireman;
 	}
 
@@ -96,55 +96,42 @@ public class GameEngine implements Observer {
 		aux_remove.clear();
 		int key = gui.keyPressed();              // obtem o codigo da tecla pressionada
 
-		if (!fireman.isOnBulldozer()) {
-			if (key == KeyEvent.VK_DOWN)            // se a tecla for ENTER, manda o bombeiro mover
-				fireman.move(key);	
-			else if (key == KeyEvent.VK_UP)
-				fireman.move(key);
-			else if (key == KeyEvent.VK_LEFT)
-				fireman.move(key);
-			else if (key == KeyEvent.VK_RIGHT)
-				fireman.move(key);
-		}	else {
-			if (key == KeyEvent.VK_DOWN)            
-				bulldozer.move(key);	// Quando estão 2 bulldozer's no mapa, só move um deles, independentemente do qual o bombeiro entra, devido a este bulldozer.move
-			else if (key == KeyEvent.VK_UP)
-				bulldozer.move(key);
-			else if (key == KeyEvent.VK_LEFT)
-				bulldozer.move(key);
-			else if (key == KeyEvent.VK_RIGHT)
-				bulldozer.move(key);
+		if(Direction.isDirection(key)) { // controlar o movimento do elemento que está ativo, recebendo uma 'key' (direção dada pela tecla carregada no teclado)
+			activeElement().move(key);
 		}
-		if (key == KeyEvent.VK_ENTER) {
-			fireman.exitBulldozer();
-			fireman.setPosition(bulldozer.getPosition());
+		
+		if (key == KeyEvent.VK_ENTER) { // ao ser pressionada a tecla ENTER no teclado, o bombeiro sai do bulldozer, sendo definida a mesma posição do bulldozer, e utilização do ActiveElement para reativar o fireman
+			fireman.exitVehicle();
+			fireman.setPosition(activeElement().getPosition());
+			activeElement().setActiveElement(false);
 		}
-
-		if (key == KeyEvent.VK_P)
+		
+		if (key == KeyEvent.VK_P) // chamada do avião ao ser pressionada a tecla 'P'
 			callPlane();
 
-		if (isTheMapStillOnFire() == false) {
+		if (isTheMapStillOnFire() == false) { // caso já não exista nenhum fogo no mapa, as pontuações são registadas num ficheiro, pela função scoreRegist(), e coloca a pontuação a 0 para que seja inicializado o novo nível, sendo carregado o novo mapa
 			scoreRegist();
 			score = 0;
 			changeMap();
 		}
 
-		//Controlar para não ter pontos negativos -> impor um limite
-		//Pontuar por fogos apagados pelo avião
-		//Pontuar, talvez, por .....
-
 		for (GameElement gameElement : tileList) {
 			gameElement.updateElement();
 		}
-		gui.setStatusMessage("Pontuação de " + nickname + " : "+getGameEngineScore());
+		gui.setStatusMessage("Pontuação de " + nickname + " : "+getGameEngineScore()); // definição da barra de estado, que é atualizada ao longo do jogo com a pontuação do jogador
 
 		tileList.addAll(aux_add);
 		tileList.removeAll(aux_remove);
 
-		for (GameElement gameElement : tileList) {
-			System.out.println("nome:" + gameElement.getName() + " posição:" + gameElement.getPosition() + " está a arder:" + isBurning(gameElement.getPosition()));
-		}
 		gui.update();                            // redesenha as imagens na GUI, tendo em conta as novas posicoes
+	}
+
+	public MovableObject activeElement() { // percorre a tileList à procura de um MovableObject que esteja ativo, e retorna-o
+		for (GameElement gameElement : tileList) {
+			if (gameElement instanceof MovableObject && ((MovableObject) gameElement).isActive())
+				return (MovableObject) gameElement; 
+		}
+		return null;
 	}
 
 	// Criacao dos objetos e envio das imagens para GUI
@@ -154,14 +141,13 @@ public class GameEngine implements Observer {
 		createMoreStuff(file);    // criar mais objetos (bombeiro, fogo,...)
 		sendImagesToGUI();    // enviar as imagens para a GUI
 		ImageIcon icon = new ImageIcon("images/fireman.png");
-		nickname = String.valueOf(JOptionPane.showInputDialog(null, "Introduz o teu nickname: ", "FireFight", JOptionPane.PLAIN_MESSAGE, icon, null, ""));
+		nickname = String.valueOf(JOptionPane.showInputDialog(null, "Introduz o teu nickname: ", "FireFight", JOptionPane.PLAIN_MESSAGE, icon, null, "")); // criação da janela para pedir um nickname ao utilizador para que se inicie o jogo
 	}
 
-	public char[][] createMatrix(File file) throws FileNotFoundException {
+	public char[][] createMatrix(File file) throws FileNotFoundException { // transformação de um ficheiro ".txt" numa matriz, para criar o terreno de jogo com a mesma
 		char[][] m = new char[GRID_HEIGHT][];
 		Scanner s = new Scanner(file);
 		int i = 0;
-
 		while(s.hasNextLine()) {
 			if(i < 10) {
 				m[i] = s.nextLine().toCharArray();
@@ -169,7 +155,6 @@ public class GameEngine implements Observer {
 				s.nextLine();
 			}
 			i++;
-
 		}
 		createTerrain(m);
 		s.close();
@@ -177,7 +162,7 @@ public class GameEngine implements Observer {
 	}
 
 	// Criacao do terreno
-	private void createTerrain(char[][] mapa) {
+	private void createTerrain(char[][] mapa) { // recebe a matriz acima criada, e constrói o terreno de jogo, com os diferentes tipos de terreno
 
 		for (int y = 0; y < GRID_HEIGHT; y++) {
 			for (int x = 0; x < GRID_WIDTH; x++) {
@@ -190,6 +175,10 @@ public class GameEngine implements Observer {
 					tileList.add(new Grass(new Point2D(x,y)));
 				} else if (c == '_'){
 					tileList.add(new Land(new Point2D(x,y)));
+				} else if (c == 'a'){
+					tileList.add(new Abies(new Point2D(x,y)));
+				} else if (c == 'b'){
+					tileList.add(new FuelBarrel(new Point2D(x,y)));
 				}
 			}
 		}
@@ -197,7 +186,7 @@ public class GameEngine implements Observer {
 
 
 	// Criacao de mais objetos
-	private void createMoreStuff(File file) throws FileNotFoundException {
+	private void createMoreStuff(File file) throws FileNotFoundException { // leitura do resto do ficheiro, para que sejam adicionados os elementos de jogo
 		Scanner s = new Scanner(file);
 		while (s.hasNextLine()) {
 			String str = s.next();
@@ -225,7 +214,7 @@ public class GameEngine implements Observer {
 		}
 	}
 
-	public GameElement getGameElement(Point2D position) {
+	public GameElement getGameElement(Point2D position) { // percorre a tileList, e retorna um GameElement de uma determinada posição
 		for (int i = tileList.size() - 1; i >= 0; i--) {
 			GameElement gameElement = tileList.get(i);
 			if (gameElement.getPosition().equals(position)) {
@@ -245,7 +234,7 @@ public class GameEngine implements Observer {
 		gui.removeImage(ge);
 	}
 
-	public boolean isBurning(Point2D position) {
+	public boolean isBurning(Point2D position) { // verifica se uma determinada posição está a arder
 		for (GameElement gameElement : tileList) {
 			if (gameElement instanceof Fire && gameElement.getPosition().equals(position)) {
 				return true;
@@ -254,7 +243,7 @@ public class GameEngine implements Observer {
 		return false;
 	}
 
-	public boolean isThereABulldozer(Point2D position) {
+	public boolean isThereABulldozer(Point2D position) { // verifica se uma determinada posição contém um bulldozer 
 		for (GameElement gameElement : tileList) {
 			if (gameElement instanceof Bulldozer && gameElement.getPosition().equals(position)) {
 				return true;
@@ -263,7 +252,7 @@ public class GameEngine implements Observer {
 		return false;
 	}
 
-	public boolean isThereAFireman() {
+	public boolean isThereAFireman() { // verifica se uma determinada posição contém um bombeiro 
 		for (GameElement gameElement : tileList) {
 			if (gameElement instanceof Fireman) {
 				return true;
@@ -272,7 +261,7 @@ public class GameEngine implements Observer {
 		return false;
 	}
 
-	public void callPlane() {
+	public void callPlane() { // chama o avião, e coloca-o na posição, tendo em conta o número de fogos de uma coluna
 		int max_index = 0;
 		int max_value = fireCount(0);
 		for (int x = 1; x < GRID_WIDTH; x++) {
@@ -286,7 +275,7 @@ public class GameEngine implements Observer {
 		addGameElement(plane);
 	}
 
-	public int fireCount(int x) {
+	public int fireCount(int x) { // conta os fogos de cada coluna, para atribuir a posição do avião
 		int count = 0;
 		for (GameElement gameElement : tileList) {
 			if (gameElement instanceof Fire && gameElement.getPosition().getX() == x) {
@@ -296,7 +285,7 @@ public class GameEngine implements Observer {
 		return count;
 	}
 
-	public GameElement fireOfThisPosition(Point2D position) {
+	public GameElement fireOfThisPosition(Point2D position) { // devolve o fogo de uma determinada posição
 		for (GameElement gameElement : tileList) {
 			if (gameElement instanceof Fire && gameElement.getPosition().equals(position)) {
 				return gameElement;
@@ -304,8 +293,35 @@ public class GameEngine implements Observer {
 		}
 		return null;
 	}
+	
+	public GameElement explosionOfThisPosition(Point2D position) { // devolve a explosão de uma determinada posição
+		for (GameElement gameElement : tileList) {
+			if (gameElement instanceof Explosion && gameElement.getPosition().equals(position)) {
+				return gameElement;
+			}
+		}
+		return null;
+	}
+	
+	public MovableObject bulldozerOfThisPosition(Point2D position) { // devolve o bulldozer de uma determinada posição
+		for (GameElement gameElement : tileList) {
+			if (gameElement instanceof Bulldozer && gameElement.getPosition().equals(position)) {
+				return (MovableObject) gameElement;
+			}
+		}
+		return null;
+	}
+	
+	public Terrain terrainOfThisPosition(Point2D position) { // devolve o terreno de uma determinada posição
+		for (GameElement gameElement : tileList) {
+			if (gameElement instanceof Terrain && gameElement.getPosition().equals(position)) {
+				return (Terrain) gameElement;
+			}
+		}
+		return null;
+	}
 
-	public boolean isTheMapStillOnFire() {
+	public boolean isTheMapStillOnFire() { // verifica se o mapa ainda está a arder
 		for (GameElement gameElement : tileList) {
 			if (gameElement instanceof Fire)
 				return true;
@@ -313,7 +329,7 @@ public class GameEngine implements Observer {
 		return false;
 	}
 
-	public void changeMap() {
+	public void changeMap() { // muda de mapa, quando o atual já não está a arder
 		try {
 			tileList.clear();
 			ListOfPlayers.clear();
@@ -330,7 +346,7 @@ public class GameEngine implements Observer {
 		}
 	}
 
-	public void readScoreFile() {
+	public void readScoreFile() { // lê as pontuações de um ficheiro
 		try {
 			String name = "Leaderboards\\scores_level"+level+".txt";
 			File file = new File(name);
@@ -348,7 +364,7 @@ public class GameEngine implements Observer {
 		}
 	}
 
-	public void scoreRegist() {
+	public void scoreRegist() { // regista as pontuações num ficheiro
 		try {
 			readScoreFile();
 			String name = "Leaderboards\\scores_level"+level+".txt";

@@ -10,27 +10,30 @@ import pt.iul.ista.poo.utils.Point2D;
 // Isso sera' de evitar na versao a serio do projeto
 
 public class Fireman extends MovableObject {
-	
+
 	String name = "fireman";
 
 	private boolean isOnBulldozer;
 
 	GameEngine gameEngine = GameEngine.getInstance();
+	
+	Bulldozer bulldozer;
 
 	public Fireman(Point2D position) {
-		super(position);
+		super(position, true);
 	}
 
-	public boolean isOnBulldozer() {
+	public boolean isOnVehicle() {
 		return isOnBulldozer;
 	}
 
-	public void setOnBulldozer(boolean isOnBulldozer) {
+	public void setOnVehicle(boolean isOnBulldozer) {
 		this.isOnBulldozer = isOnBulldozer;
 	}
-	
-	public void exitBulldozer() {
-		setOnBulldozer(false);
+
+	public void exitVehicle() {
+		setOnVehicle(false);
+		setActiveElement(true);
 		gameEngine.addGameElement(gameEngine.getFireman());
 	}
 
@@ -52,22 +55,18 @@ public class Fireman extends MovableObject {
 		Point2D newPosition = super.getPosition().plus(direction.asVector());
 
 		super.move(key);
-		
+
 		setFiremanDirection(key);
 
-		if (gameEngine.isBurning(newPosition)) {
+		if (gameEngine.isBurning(newPosition)) { // Apaga o fogo
 			Water water = new Water(newPosition);
 			water.setWaterDirection(key);
 			gameEngine.addGameElement(water);
 			gameEngine.removeGameElement(gameEngine.getGameElement(newPosition));
 			gameEngine.score += 60;
 		}
-
-		if (key == KeyEvent.VK_ENTER) {
-			exitBulldozer();
-		}
 	}
-	
+
 	public void setFiremanDirection(int key) {
 		if (key == KeyEvent.VK_LEFT)
 			name = "fireman_left";
@@ -78,14 +77,9 @@ public class Fireman extends MovableObject {
 	@Override
 	public void updateElement() {
 		if (gameEngine.isThereABulldozer(getPosition())) {
-			setOnBulldozer(true);
+			setOnVehicle(true);
+			gameEngine.bulldozerOfThisPosition(getPosition()).setActiveElement(true);
 			gameEngine.removeGameElement(gameEngine.getFireman());
 		}
-	}
-
-	@Override
-	public void activateElement() {
-		// TODO Auto-generated method stub
-		
 	}
 }

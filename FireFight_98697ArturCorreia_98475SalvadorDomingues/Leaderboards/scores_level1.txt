@@ -1,5 +1,5 @@
+sd 2272
+rg 1596
 Alex 616
 Artur 504
 Salvador 390
-Op 60
-Artur 0

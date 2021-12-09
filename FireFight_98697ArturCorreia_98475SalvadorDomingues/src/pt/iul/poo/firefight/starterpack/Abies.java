@@ -2,28 +2,29 @@ package pt.iul.poo.firefight.starterpack;
 
 import pt.iul.ista.poo.utils.Point2D;
 
-public class Eucaliptus extends Terrain {
+public class Abies extends Terrain {
 
-	public Eucaliptus(Point2D position) {
-		super(position, 5);
+	public Abies(Point2D position) {
+		super(position, 20);
+	}
+
+	@Override
+	public String getName() {
+		if (!super.isBurnt()) {
+			return "abies";
+		}
+		return "burntabies";
 	}
 
 	@Override
 	public int getLayer() {
 		return 0;
 	}
-
-	@Override
-	public String getName() {
-		if (!super.isBurnt()) {
-			return "eucaliptus";
-		}
-		return "burnteucaliptus";
-	}
-
+	
 	@Override
 	public void updateElement() {
 		super.updateElement();
-		burned(5);
+		burned(20);
 	}
+
 }
